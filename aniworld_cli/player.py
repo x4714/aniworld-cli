@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import shlex
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Sequence
 
 from . import i18n
 from .models import Stream
@@ -44,7 +46,31 @@ def install_hint() -> str:
     return i18n.t("mpv_hint_linux")
 
 
-def build_command(mpv_path: str, stream: Stream, title: str | None = None) -> list[str]:
+def split_args(value: str | None) -> list[str]:
+    """Split ``--mpv-args`` into argv tokens, on every OS.
+
+    ``posix=True`` would eat backslashes in Windows paths, ``posix=False`` keeps
+    the quotes around quoted tokens; so: split per platform, then unquote.
+    """
+    if not value:
+        return []
+    tokens = shlex.split(value, posix=not sys.platform.startswith("win"))
+    cleaned = []
+    for token in tokens:
+        if len(token) >= 2 and token[0] == token[-1] and token[0] in "\"'":
+            token = token[1:-1]
+        cleaned.append(token)
+    return cleaned
+
+
+def build_command(
+    mpv_path: str,
+    stream: Stream,
+    title: str | None = None,
+    extra: Sequence[str] | None = None,
+    config_dir: str | Path | None = None,
+    ipc_path: str | None = None,
+) -> list[str]:
     """Build the mpv argv from the resolved stream and its required headers.
 
     User-Agent is passed via mpv's dedicated ``--user-agent`` flag rather than
@@ -58,6 +84,9 @@ def build_command(mpv_path: str, stream: Stream, title: str | None = None) -> li
 
     ``--no-terminal`` keeps mpv's log (track list, harmless ffmpeg TLS noise on
     quit) out of the terminal, as with ani-cli; mpv is controlled in its window.
+
+    Everything below ``--no-terminal`` is optional and additive: with no extra
+    arguments the command is byte-for-byte what it always was.
     """
     cmd = [mpv_path, "--no-terminal"]
     headers = dict(stream.headers)
@@ -71,18 +100,38 @@ def build_command(mpv_path: str, stream: Stream, title: str | None = None) -> li
         cmd.append(f"--http-header-fields={fields}")
     if title:
         cmd.append(f"--force-media-title={title}")
+    if config_dir:
+        cmd.append(f"--config-dir={config_dir}")
+    if ipc_path:
+        cmd.append(f"--input-ipc-server={ipc_path}")
+    cmd.extend(extra or ())
     cmd.append(stream.url)
     return cmd
 
 
-def play(stream: Stream, mpv_path: str | None = None, title: str | None = None) -> int:
-    """Launch mpv for ``stream``. Returns mpv's exit code.
+def play(
+    stream: Stream,
+    mpv_path: str | None = None,
+    title: str | None = None,
+    extra: Sequence[str] | None = None,
+    config_dir: str | Path | None = None,
+) -> int:
+    """Launch mpv for ``stream`` and wait. Returns mpv's exit code.
 
-    Raises PlayerNotFound if mpv is unavailable.
+    Raises PlayerNotFound if mpv is unavailable. This is the no-IPC path; when
+    in-player controls are enabled, :mod:`aniworld_cli.playback` drives mpv
+    through its JSON IPC socket instead.
     """
     resolved = find_mpv(mpv_path)
     if not resolved:
         raise PlayerNotFound(install_hint())
-    cmd = build_command(resolved, stream, title)
+    cmd = build_command(
+        resolved, stream, title, extra=extra, config_dir=config_dir
+    )
     proc = subprocess.run(cmd)  # noqa: S603 - argv list, no shell
     return proc.returncode
+
+
+def spawn(cmd: Sequence[str], env: dict[str, str] | None = None) -> subprocess.Popen:
+    """Start mpv without waiting, for the IPC path."""
+    return subprocess.Popen(list(cmd), env=env)  # noqa: S603 - argv list, no shell
