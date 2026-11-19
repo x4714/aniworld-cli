@@ -18,6 +18,18 @@
 <p align="center"><img src="docs/demo.gif" alt="aniworld-cli demo" width="800"></p>
 </details>
 
+## About this fork
+
+This is a fork of [dxmoc/aniworld-cli](https://github.com/dxmoc/aniworld-cli).
+Upstream decided not to take the changes in this branch: a bundled mpv
+configuration with Anime4K, and switching language, quality and shaders while
+watching. They live here instead, unchanged. Upstream keeps a smaller,
+opt-in version of the same idea.
+
+```bash
+pipx install git+https://github.com/x4714/aniworld-cli
+```
+
 ## Features
 
 - **fzf menus like ani-cli**: type to filter, arrows to move, Enter to pick.
@@ -47,6 +59,9 @@
 ## Install
 
 ### Quick install
+
+> These two scripts fetch **upstream**, without the features documented above.
+> For this fork, use the `pipx` command in [About this fork](#about-this-fork).
 
 **Linux** (installs mpv with your package manager, asks for `sudo`):
 
