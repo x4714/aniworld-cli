@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from aniworld_cli import mpv_pack
+from aniworld_cli import mpv_pack, shaders
 
 
 def test_materialize_copies_the_pack_and_creates_the_overlay(tmp_path: Path):
@@ -103,3 +103,13 @@ def test_shader_dir_falls_back_to_the_pack(tmp_path: Path):
 def test_shader_dir_is_none_without_a_pack(monkeypatch, tmp_path: Path):
     monkeypatch.setattr(mpv_pack, "pack_source", lambda: tmp_path / "missing")
     assert mpv_pack.shader_dir(tmp_path) is None
+
+
+def test_every_preset_has_a_menu_hint():
+    """The shader menu explains each mode; a missing hint is a silent gap."""
+    assert set(shaders.HINTS) == set(shaders.PRESETS)
+    for token, label in shaders.LABELS:
+        hint = shaders.HINTS[token]
+        assert hint, token
+        # Drawn at fs19 inside an 860 px panel: keep it on one line.
+        assert len(hint) <= 56, (token, len(hint))
