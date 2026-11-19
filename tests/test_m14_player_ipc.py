@@ -272,3 +272,17 @@ def test_handle_strips_the_message_name_from_client_message_args(tmp_path: Path,
 
     session._handle(["aniworld-cmd", "shader"])  # too short: ignored
     assert seen == [("language", "eng-sub")]
+
+
+def test_explicit_preset_overrides_the_source(tmp_path: Path):
+    """--anime4k fast must win over the height-based choice; junk falls back."""
+    session = _session(tmp_path)
+    session.shader_dir = tmp_path
+    session.args.anime4k = "fast"
+    assert session._initial_preset() == "fast"
+
+    session.args.anime4k = "no-such-preset"
+    assert session._initial_preset() == shaders.DEFAULT
+
+    session.args.anime4k = "auto"
+    assert session._initial_preset() == shaders.auto_preset(None)
