@@ -36,16 +36,19 @@ PRESETS: dict[str, list[str]] = {
         "Anime4K_AutoDownscalePre_x4.glsl",
         "Anime4K_Upscale_CNN_x2_S.glsl",
     ],
-    # Mode B: upscale only, no restoration.
-    "b": [
+    # Upscale only: no restoration. Named by what it does, because it is not
+    # bloc97's Mode B (that one is Restore_CNN_Soft + upscale).
+    "upscale": [
         "Anime4K_Clamp_Highlights.glsl",
         "Anime4K_Upscale_CNN_x2_M.glsl",
         "Anime4K_AutoDownscalePre_x2.glsl",
         "Anime4K_AutoDownscalePre_x4.glsl",
         "Anime4K_Upscale_CNN_x2_S.glsl",
     ],
-    # Mode C: denoise + deblur, no CNN upscale.
-    "c": [
+    # Denoise + deblur, no upscale at all: also not bloc97's Mode C
+    # (Upscale_Denoise + upscale), so it is named by its effect instead of a
+    # mode letter.
+    "denoise": [
         "Anime4K_Clamp_Highlights.glsl",
         "Anime4K_Denoise_Bilateral_Mean.glsl",
         "Anime4K_Deblur_DoG.glsl",
@@ -60,8 +63,8 @@ LABELS: list[tuple[str, str]] = [
     ("gentle", "Gentle (soft restore)"),
     ("a", "Mode A - HQ"),
     ("fast", "Mode A - fast"),
-    ("b", "Mode B - upscale only"),
-    ("c", "Mode C - denoise + deblur"),
+    ("upscale", "Upscale only"),
+    ("denoise", "Denoise + deblur"),
 ]
 
 #: What each preset actually does, for the in-player menu. Short on purpose:
@@ -72,8 +75,8 @@ HINTS: dict[str, str] = {
     "gentle": "softer restore for very blocky sources",
     "a": "restore + 2x upscale: best all-round for 720p",
     "fast": "Mode A on smaller CNNs, about a third of the GPU cost",
-    "b": "upscale only, cheapest way to sharpen 720p",
-    "c": "denoise + deblur for noisy or old encodes",
+    "upscale": "upscale only, cheapest way to sharpen 720p",
+    "denoise": "denoise + deblur for noisy or old encodes",
 }
 
 DEFAULT = "restore"

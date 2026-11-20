@@ -12,7 +12,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from . import __version__, i18n
+from . import __version__, i18n, shaders
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -60,8 +60,8 @@ def build_parser() -> argparse.ArgumentParser:
         default="auto",
         metavar="PRESET",
         help=(
-            "Anime4K preset: auto (from the source resolution), off, restore, gentle, "
-            "a, fast, b, c"
+            "Anime4K preset: auto (from the source resolution), "
+            + ", ".join(shaders.PRESETS)
         ),
     )
     p.add_argument(

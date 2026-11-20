@@ -317,3 +317,10 @@ def test_every_preset_has_a_menu_hint():
         assert hint, token
         # Drawn at fs19 inside an 860 px panel: keep it on one line.
         assert len(hint) <= 56, (token, len(hint))
+
+
+def test_every_shipped_shader_is_used_by_a_preset():
+    """An unused .glsl is dead weight in every wheel and bundle."""
+    shipped = {path.name for path in (mpv_pack.pack_source() / "shaders").glob("*.glsl")}
+    used = {name for names in shaders.PRESETS.values() for name in names}
+    assert shipped - used == set()
